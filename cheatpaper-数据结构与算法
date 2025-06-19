@@ -1,0 +1,1064 @@
+### Dijkstra
+
+```python
+###Candies（额外条件）
+import heapq
+from collections import defaultdict
+n,m=map(int,input().split())
+dic=defaultdict(list)
+for _ in range(m):
+    a,b,c=map(int,input().split())
+    dic[a].append((b,c))
+heap=[]
+max_candies=[float('inf')]*(n+1)
+max_candies[1]=0
+heapq.heappush(heap,(0,1))
+while heap:
+    cur_diff,cur_place=heapq.heappop(heap)
+    if cur_place==n:
+        break
+    if cur_diff>max_candies[cur_place]:
+        continue
+    for next_,diff in dic[cur_place]:
+        if max_candies[next_]>max_candies[cur_place]+diff:
+            max_candies[next_]=max_candies[cur_place]+diff
+            heapq.heappush(heap,(max_candies[next_],next_))
+print(max_candies[n])
+###兔子与樱花
+import heapq
+from collections import defaultdict
+def path(dic,start,end):
+    if start==end:
+        return start
+    heap=[]
+    heapq.heappush(heap,(0,start,[]))
+    visited=set()
+    while heap:
+        sum_dist,cur_place,path=heapq.heappop(heap)
+        if cur_place in visited:
+            continue
+        visited.add(cur_place)
+        if cur_place==end:
+            result=path[0][0]
+            for part in path:
+                result+=f'->({part[1]})->{part[2]}'
+            return result
+        for place,dist in dic[cur_place]:
+            if place not in visited:
+                new_path=path[:]
+                new_path.append((cur_place,dist,place))
+                heapq.heappush(heap,(sum_dist+dist,place,new_path))
+    return 'no'
+p=int(input())
+places=[input() for _ in range(p)]
+dic=defaultdict(list)
+q=int(input())
+for _ in range(q):
+    a,b,dist=input().split()
+    dic[a].append((b,int(dist)))
+    dic[b].append((a, int(dist)))
+r=int(input())
+for _ in range(r):
+    start,end=input().split()
+    print(path(dic,start,end))
+###中转航班
+class Solution:
+    def findCheapestPrice(self, n: int, flights: List[List[int]], src: int, dst: int, k: int) -> int:
+        dic=defaultdict(list)
+        for s,e,v in flights:
+            dic[s].append((e,v))
+        heap=[]
+        heapq.heappush(heap,(0,src,0))
+        dist = [[float('inf')] * (k + 2) for _ in range(n)]
+        dist[src][0] = 0
+        while heap:
+            cur_v,cur_p,cur_k=heapq.heappop(heap)
+            if cur_p==dst:
+                return cur_v
+            if cur_k>k:
+                    continue
+            for next_,v in dic[cur_p]:
+                new_v=cur_v+v
+                new_k=cur_k+1
+                if new_k<=k+1 and new_v<dist[next_][new_k]:
+                    dist[next_][new_k]=new_v
+                    heapq.heappush(heap,(cur_v+v,next_,cur_k+1))
+        return -1
+```
+
+#### Bellman  Ford
+
+```python
+#例题：货币兑换
+###变种：判断有无正权环
+parts0=list(input().split())
+n,m,s,v=int(parts0[0]),int(parts0[1]),int(parts0[2]),float(parts0[3])
+exchange=[]
+for _ in range(m):
+    parts=list(input().split())
+    a,b,r1,c1,r2,c2=int(parts[0]),int(parts[1]),float(parts[2]),float(parts[3]),float(parts[4]),float(parts[5])
+    exchange.append((a,b,r1,c1))
+    exchange.append((b,a,r2,c2))
+dist=[0.0]*(n+1)
+dist[s]=v
+for _ in range(n):
+    updated=False
+    for edge in exchange:
+        a,b,r,c=edge
+        if (dist[a]-c)*r>dist[b]:
+            dist[b]=(dist[a]-c)*r
+            updated=True
+    if not updated:
+        break
+flag='NO'
+for edge in exchange:  ###如果还能进行，说明有正权环。
+    a,b,r,c=edge
+    if (dist[a]-c)*r>dist[b]:
+        flag='YES'
+        break
+print(flag)
+```
+
+### 树状dp
+
+```python
+###打家劫舍Ⅲ
+class Solution:
+    def rob(self, root: Optional[TreeNode]) -> int:
+        def dp(node):
+            if node is None:
+                return (0,0)
+            left=dp(node.left)
+            right=dp(node.right)
+            r0=left[1]+right[1]+node.val
+            r1=max(left)+max(right)
+            return (r0,r1)
+        return max(dp(root))
+###二叉树最大路径和
+def maxPathSum(root):
+    res = [float('-inf')]
+    def helper(node):
+        if not node:
+            return 0
+        left = max(0, helper(node.left))
+        right = max(0, helper(node.right))
+        # 更新全局最大值
+        res[0] = max(res[0], left + right + node.val)
+        # 返回当前节点的最大贡献值
+        return max(left, right) + node.val
+    helper(root)
+    return res[0]
+###背包问题
+def tree_knapsack(root, capacity):
+    # dp[node][i] 表示以node为根的子树使用i资源能获得的最大价值
+    dp = [[0]*(capacity+1) for _ in range(n)]
+    def dfs(u, parent):
+        for v in u.children:
+            if v == parent:
+                continue
+            dfs(v, u)
+            # 分组背包转移
+            for i in range(capacity, -1, -1):
+                for j in range(i+1):
+                    dp[u][i] = max(dp[u][i], dp[u][i-j] + dp[v][j])
+    dfs(root, -1)
+    return dp[root][capacity]
+```
+
+### merged sort（归并排序）
+
+```python
+###merged_sort
+def merge_sort(arr,count):
+    if len(arr)<=1:
+        return arr
+    mid=len(arr)//2
+    left=merge_sort(arr[:mid],count)
+    right=merge_sort(arr[mid:],count)
+    return merge(left,right,count)
+def merge(left,right,count):
+    sorted_arr=[]
+    i=j=0
+    while i<len(left) and j<len(right):
+        if left[i]<right[j]:
+            sorted_arr.append(left[i])
+            i+=1
+        else:
+            sorted_arr.append(right[j])
+            j+=1
+            count[0]+=len(left)-i
+    sorted_arr.extend(left[i:])
+    sorted_arr.extend(right[j:])
+    return sorted_arr
+while True:
+    n=int(input())
+    if n==0:
+        break
+    nums=[int(input()) for _ in range(n)]
+    count=[0]
+    merge_sort(nums,count)
+    print(count[0])
+```
+
+### 并查集
+
+```python
+###宗教信仰（完整）
+class DSU:
+    def __init__(self,n):
+        self.parent=list(range(n+1))
+        self.size=[1]*(n+1)
+    def find(self,x):
+        while self.parent[x]!=x: #指向父节点，代表点
+            self.parent[x]=self.parent[self.parent[x]]
+            x=self.parent[x]
+        return x
+    def union(self,x,y):
+        x_root=self.find(x)
+        y_root=self.find(y)
+        if x_root==y_root:
+            return False
+        if self.size[x_root]<self.size[y_root]:
+            x_root,y_root=y_root,x_root
+        self.parent[y_root]=x_root
+        self.size[x_root]+=self.size[y_root]
+        return True
+def main():
+    case=1
+    while True:
+        n,m=map(int,input().split())
+        if n==m==0:
+            break
+        dsu=DSU(n)
+        for _ in range(m):
+            i,j =map(int,input().split())
+            dsu.union(i,j)
+        ans=set()
+        for i in range(1,n+1):
+            ans.add(dsu.find(i))
+        print(f"Case {case}: {len(ans)}")
+        case+=1
+if __name__=="__main__":
+    main()
+###相同的班级个数（简化）
+def find_father(x, father):
+    if father[x] != x:
+        father[x] = find_father(father[x], father)
+    return father[x]
+def union_set(a, b, father):
+    fa_a = find_father(a, father)
+    fa_b = find_father(b, father)
+    if fa_a != fa_b:
+        father[fa_a] = fa_b
+n,m=map(int,input().split())
+father=[i for i in range(n)]
+for _ in range(m):
+    a,b=map(int,input().split())
+    union_set(a-1,b-1,father)
+class_count=sum(1 for i in range(n) if father[i]==i)
+print(class_count)
+```
+
+#### 栈（Stack）
+
+```python
+###后缀表达式（有优先级）
+string=list(input().split())
+stack=[]
+ans=[]
+for i in string:
+    if i.isdigit():
+        ans.append(i)
+    elif i=='+' or i=='-':
+        while stack:
+            ans.append(stack.pop())
+        stack.append(i)
+    else:
+        while stack:
+            if stack[-1]=='*' or stack[-1]=='/':
+                ans.append(stack.pop())
+            else:
+                break
+        stack.append(i)
+while stack:
+    ans.append(stack.pop())
+print(*ans)
+###可能的出栈序列   ##递归
+def generate_sequences(n):
+    def backtrack(stack,sequence,remain):
+        if not remain and not stack:
+            result.append(sequence)
+        if remain:
+            backtrack(stack+[remain[0]],sequence,remain[1:])
+        if stack:
+            backtrack(stack[:-1],sequence+[stack[-1]],remain)
+    result=[]
+    backtrack([],[],list(range(1,n+1)))
+    return result
+n=int(input())
+sequences0=generate_sequences(n)
+sequences=sorted(sequences0)
+print(sequences)
+```
+
+### 深度优先搜索
+
+```python
+def check(n,m,nx,ny,lst):###马走日
+    if nx<0 or nx>=n or ny<0 or ny>=m or lst[nx][ny]:
+        return False
+    else:
+        return True
+def dfs(n,m,x,y,lst,count,ans):
+    if count==0:
+        ans[0]+=1
+        return
+    lst[x][y]=True
+    count-=1
+    directions=[[-2,-1],[-2,1],[-1,2],[-1,-2],[1,2],[1,-2],[2,1],[2,-1]]
+    for dx,dy in directions:
+        nx,ny=x+dx,y+dy
+        if check(n,m,nx,ny,lst):
+            dfs(n,m,nx,ny,lst,count,ans)
+    lst[x][y]=False
+    count+=1
+t=int(input())
+for _ in range(t):
+    n,m,x,y=map(int,input().split())
+    lst = [[False] * m for _ in range(n)]
+    count=n*m-1
+    ans=[0]
+    dfs(n,m,x,y,lst,count,ans)
+    print(ans[0])
+```
+
+### KMP算法
+
+```python
+def compute_next(s):   ###前缀中的周期
+    n=len(s)
+    next_=[0]*(n+1)
+    next_[0]=-1
+    i,j=0,-1
+    while i<n:
+        if j==-1 or s[i]==s[j]:
+            i+=1
+            j+=1
+            next_[i]=j
+        else:
+            j=next_[j]
+    return next_
+case=1
+while True:
+    n=int(input())
+    if n==0:
+        break
+    string=input()
+    print(f"Test case #{case}")
+    next_=compute_next(string)
+    for i in range(2,n+1):
+        len_cycle=i-next_[i]
+        if i%len_cycle==0 and i//len_cycle>1:
+            print(i,i//len_cycle)
+    print()
+    case+=1
+```
+
+#### **dfs**（**启发式搜索**）
+
+```python
+#### 启发式搜索
+def dfs(grid,count,x,y,n):
+    if count==0:
+        return True
+    directions=[(1,2),(1,-2),(-1,2),(-1,-2),(2,-1),(2,1),(-2,1),(-2,-1)]
+    next_moves=[]
+    for dx,dy in directions:
+        nx,ny=x+dx,y+dy
+        if 0<=nx<n and 0<=ny<n and not grid[nx][ny]:
+            moves=sum((0<=nx+ddx<n and 0<=ny+ddy<n and not grid[nx+ddx][ny+ddy]) for ddx,ddy in directions)
+            next_moves.append((moves,nx,ny))
+    next_moves.sort()  ###让可走步数最小的先走
+    for _,nx,ny in next_moves:
+        grid[nx][ny]=True
+        if dfs(grid,count-1,nx,ny,n):
+            return True
+        grid[nx][ny]=False
+    return False
+n=int(input())
+x,y=map(int,input().split())
+grid=[[False]*n for _ in range(n)]
+grid[x][y]=True
+print('success' if dfs(grid,n*n-1,x,y,n) else 'fail')
+```
+
+#### 二分查找
+
+```python
+###网线主管
+def binary_search(length,k,mid):
+    cur=0
+    for l in length:
+        cur+=l//mid
+        if cur>=k:
+            return True
+    if cur>=k:
+        return True
+    return False
+n,k=map(int,input().split())
+length=[int(float(input())*100) for _ in range(n)]
+left,right=1,max(length)
+ans=0
+while left<=right:
+    mid=(left+right)//2
+    if binary_search(length,k,mid):
+        left=mid+1
+        ans=mid
+    else:
+        right=mid-1
+print(f"{ans/100:.2f}")
+```
+
+### 拓扑排序
+
+```python
+###模版
+from collections import defaultdict
+import heapq
+v,a=map(int,input().split())
+dic=defaultdict(set)
+in_degree=[0]*(v+1)
+for _ in range(a):
+    x,y=map(int,input().split())
+    if y not in dic[x]:
+        in_degree[y]+=1
+    dic[x].add(y)
+heap=[]
+for i in range(1,v+1):
+    if in_degree[i]==0:
+        heapq.heappush(heap,i)
+result=[]
+while heap:
+    u=heapq.heappop(heap)
+    result.append(f"v{u}")
+    for x in dic[u]:
+        in_degree[x]-=1
+        if in_degree[x]==0:
+            heapq.heappush(heap,x)
+print(*result)
+###Sorting it all out
+import heapq
+def exchange(s):
+    return ord(s)-ord('A')
+def check_cycle(dic,in_degree,n):
+    queue=[]
+    for i in range(n):
+        if in_degree[i]==0:
+            queue.append(i)
+    cnt=0
+    while queue:
+        u=queue.pop(0)
+        cnt+=1
+        for v in dic[u]:
+            in_degree[v]-=1
+            if in_degree[v]==0:
+                queue.append(v)
+    return cnt!=n
+def check(dic,in_degree,result,n):
+    heap=[]
+    for i in range(n):
+        if in_degree[i]==0:
+            heapq.heappush(heap,i)
+            result[0]+=chr(ord('A')+i)
+    if len(heap)>1:return False
+    while heap:
+        cur_node=heapq.heappop(heap)
+        for x in dic[cur_node]:
+            in_degree[x]-=1
+            if in_degree[x]==0:
+                result[0]+=chr(ord('A')+x)
+                heapq.heappush(heap,x)
+        if len(heap)>1:return False
+    if len(result[0])==n:return True
+    return False
+while True:
+    n,m=map(int,input().split())
+    if n==m==0:break
+    flag1,flag2=0,0
+    in_degree=[0]*n
+    dic=[[] for _ in range(n)]
+    ans=""
+    for i in range(m):
+        part=input()
+        a,b=exchange(part[0]),exchange(part[2])
+        if flag1 or flag2:continue
+        if b not in dic[a]:
+            dic[a].append(b)
+            in_degree[b]+=1
+        dic0 = dic.copy()
+        in_degree0 = in_degree.copy()
+        if check_cycle(dic0,in_degree0,n):
+            flag2=i+1
+            continue
+        if i+1>=n-1:
+            result=[""]
+            dic1= dic.copy()
+            in_degree1= in_degree.copy()
+            if check(dic1,in_degree1,result,n):
+                flag1=i+1
+                ans=result[0]
+    if flag1:print(f"Sorted sequence determined after {flag1} relations: {ans}.")
+    if flag2:print(f"Inconsistency found after {flag2} relations.")
+    if not flag2 and not flag1:print("Sorted sequence cannot be determined.")
+###有向图中最大颜色值
+class Solution:
+    def largestPathValue(self, colors: str, edges: List[List[int]]) -> int:
+        n=len(colors)
+        dic=defaultdict(list)
+        in_degree=[0]*n
+        for u,v in edges:
+            dic[u].append(v)
+            in_degree[v]+=1
+        q=deque()
+        for i in range(n):
+            if in_degree[i]==0:
+                q.append(i)
+        dp=[[0]*26 for _ in range(n)]
+        for i in range(n):
+            c=ord(colors[i])-ord('a')
+            dp[i][c]=1
+        max_,nodes=0,0
+        while q:
+            node=q.popleft()
+            nodes+=1
+            max_=max(max_,max(dp[node]))
+            for v in dic[node]:
+                for c in range(26):
+                    new_val=dp[node][c]+(1 if ord(colors[v])-ord('a')==c else 0)
+                    if new_val>dp[v][c]:
+                        dp[v][c]=new_val
+                in_degree[v]-=1
+                if in_degree[v]==0:
+                    q.append(v)
+        if nodes<n:return -1
+        return max_
+```
+
+### 最小生成树
+
+#### Kruskal算法
+
+```python
+def find(parent,x):
+    while parent[x]!=x:
+        parent[x]=parent[parent[x]]
+        x=parent[x]
+    return x
+def kruskal(n,edges):
+    edges.sort(key=lambda x:x[2])
+    parent={chr(ord('A')+i):chr(ord('A')+i) for i in range(n)}
+    res=0
+    for u,v,w in edges:
+        root_u=find(parent,u)
+        root_v=find(parent,v)
+        if root_u!=root_v:
+            parent[root_v]=root_u
+            res+=w
+    return res
+n=int(input())
+edges=[]
+for _ in range(n-1):
+    parts=list(input().split())
+    start=parts[0]
+    k=int(parts[1])
+    for i in range(k):
+        end,weight=parts[i*2+2],int(parts[i*2+3])
+        edges.append((start,end,weight))
+print(kruskal(n,edges))
+```
+
+#### Prim算法
+
+```python
+###兔子与星空
+import heapq
+def prim(n,graph):
+    visited=set()
+    heap=[]
+    start='A'
+    visited.add(start)
+    for v,w in graph[start]:
+        heapq.heappush(heap,(w,start,v))
+    res=0
+    while heap and len(visited)<n:
+        w,u,v=heapq.heappop(heap)
+        if v not in visited:
+            visited.add(v)
+            res+=w
+            for neighbor,weight in graph[v]:
+                if neighbor not in visited:
+                    heapq.heappush(heap,(weight,v,neighbor))
+    return res
+n=int(input())
+graph={chr(ord('A')+i):[] for i in range(n)}
+for _ in range(n-1):
+    parts=input().split()
+    u=parts[0]
+    k=int(parts[1])
+    idx=2
+    for _ in range(k):
+        v=parts[idx]
+        w=int(parts[idx+1])
+        graph[u].append((v,w))
+        graph[v].append((u,w))  # 无向图，双向添加
+        idx+=2
+print(prim(n, graph))
+###Agri Net
+import heapq
+def prim(dic,n):
+    visited=set()
+    start=0
+    visited.add(start)
+    heap=[]
+    for end,value in dic[start]:
+        heapq.heappush(heap,(value,start,end))
+    res=0
+    while heap and len(visited)<n:
+        v,s,e=heapq.heappop(heap)
+        if e not in visited:
+            visited.add(e)
+            res+=v
+            for neighbor,value in dic[e]:
+                if neighbor not in visited:
+                    heapq.heappush(heap,(value,e,neighbor))
+    return res
+while True:
+    try:
+        n=int(input())
+        grid=[list(map(int,input().split())) for _ in range(n)]
+        dic={i:[] for i in range(n)}
+        for i in range(n):
+            for j in range(i+1,n):
+                dic[i].append((j,grid[i][j]))
+                dic[j].append((i,grid[i][j]))
+        print(prim(dic,n))
+    except EOFError:
+        break
+```
+
+## 二叉树
+
+#### 从中序与前序遍历序列构造二叉树
+
+```python
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+def buildTree(preorder, inorder):
+    if not preorder or not inorder:
+        return None
+    root_val = preorder[0]    # 根据先序遍历的第一个元素创建根节点
+    root = TreeNode(root_val)
+    mid_index = inorder.index(root_val)    # 找到根节点在中序遍历中的索引
+    root.left = buildTree(preorder[1:mid_index + 1], inorder[:mid_index]) # 递归构建左子树和右子树
+    root.right = buildTree(preorder[mid_index + 1:], inorder[mid_index + 1:])
+    return root
+```
+
+```python
+def preorder(root):
+    if not root:return ''
+    return root.val + preorder(root.left) + preorder(root.right)
+def inorder(root):
+    if not root:return ''
+    return inorder(root.left) + root.val + inorder(root.right）
+def postorder(root):
+    if not root:return ''
+    return inorder(root.left) + inorder(root.right）+ root.val
+```
+
+```python
+###二叉树的深度
+def depth(root,dic,count,max_):
+    if root==-1:
+        max_[0]=max(max_[0],count)
+        return
+    depth(dic[root][0],dic,count+1,max_)
+    depth(dic[root][1],dic,count+1,max_)
+from collections import defaultdict
+n=int(input())
+dic=defaultdict(list)
+for i in range(1,n+1):
+    a,b=map(int,input().split())
+    dic[i].append(a)
+    dic[i].append(b)
+max_=[0]
+depth(1,dic,0,max_)
+print(max_[0])
+```
+
+```python
+###二叉树的层序遍历
+from collections import deque
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+def levelOrder(root):
+    if not root:return []
+    result = []
+    queue = deque([root])
+    while queue:
+        level_size = len(queue)
+        current_level = []
+        for _ in range(level_size):
+            node = queue.popleft()
+            current_level.append(node.val)
+            if node.left:queue.append(node.left)
+            if node.right:queue.append(node.right)
+        result.append(current_level)
+    return result
+```
+
+```python
+###二叉搜索树根据前序遍历建树
+class TreeNode:
+    def __init__(self,val):
+        self.val=val
+        self.left=None
+        self.right=None
+def build_tree(preorder,inorder):
+    if not preorder or not inorder:return None
+    root_val=preorder[0]
+    root=TreeNode(root_val)
+    mid_index=inorder.index(root_val)
+    root.left=build_tree(preorder[1:mid_index+1],inorder[:mid_index])
+    root.right=build_tree(preorder[mid_index+1:],inorder[mid_index+1:])
+    return root
+def postorder(node):
+    if node is None:return []
+    return postorder(node.left)+postorder(node.right)+[node.val]
+n=int(input())
+preorder=list(map(int,input().split()))
+inorder=sorted(preorder)
+root=build_tree(preorder,inorder)
+result=postorder(root)
+print(*result)
+###二叉搜索树建树
+class TreeNode:
+    def __init__(self,val):
+        self.val=val
+        self.left=None
+        self.right=None
+def build_tree(root,value):
+    if root is None:return TreeNode(value)
+    if value<root.val:root.left=build_tree(root.left,value)
+    elif value>root.val:root.right=build_tree(root.right,value)
+    return root
+```
+
+```python
+###求二叉树的高度与叶子数目
+class TreeNode:
+    def __init__(self):
+        self.left=None
+        self.right=None
+def tree_height(node):
+    if node is None:return -1
+    return max(tree_height(node.left),tree_height(node.right))+1
+def c_leaves(node):
+    if node is None:return 0
+    if node.left is None and node.right is None:return 1
+    return c_leaves(node.left)+c_leaves(node.right)
+n=int(input())
+nodes=[TreeNode() for _ in range(n)]
+has_parent=[False]*n
+for i in range(n):
+    left_index,right_index=map(int,input().split())
+    if left_index!=-1:
+        nodes[i].left=nodes[left_index]
+        has_parent[left_index]=True
+    if right_index!=-1:
+        nodes[i].right=nodes[right_index]
+        has_parent[right_index]=True
+root_index=has_parent.index(False)
+root=nodes[root_index]
+height=tree_height(root)
+leaves=c_leaves(root)
+print(height,leaves)
+```
+
+```python
+###有序数组转为二叉树
+class Solution:
+    def sortedArrayToBST(self, nums: List[int]) -> Optional[TreeNode]:
+        def helper(left,right):
+            if left>right:return None
+            mid=(left+right+1)//2
+            root=TreeNode(nums[mid])
+            root.left=helper(left,mid-1)
+            root.right=helper(mid+1,right)
+            return root
+        return helper(0,len(nums)-1)
+```
+
+```python
+###翻转二叉树
+class Solution:
+    def invertTree(self, root: Optional[TreeNode]) -> Optional[TreeNode]:
+        if root is None:return None
+        root.left, root.right = root.right, root.left
+        self.invertTree(root.left)
+        self.invertTree(root.right)
+        return root
+###二叉树的直径
+class Solution:
+    def diameterOfBinaryTree(self, root: Optional[TreeNode]) -> int:
+        self.max_=0
+        def backtrack(node):
+            if node is None:return 0
+            left_depth=backtrack(node.left)
+            right_depth=backtrack(node.right)
+            self.max_=max(self.max_,left_depth+right_depth)
+            return 1+max(left_depth,right_depth)
+        backtrack(root)
+        return self.max_
+```
+
+### 字典树
+
+```python
+###字典树
+class TrieNode:
+    def __init__(self):
+        self.children={}
+        self.is_end=False
+class Trie:
+    def __init__(self):
+        self.root=TrieNode()
+    def insert(self,number):
+        node=self.root
+        for digit in number:
+            if digit not in node.children:
+                node.children[digit]=TrieNode()
+            node=node.children[digit]
+            if node.is_end:return False
+        if node.children:return False
+        node.is_end=True
+        return True
+t=int(input())
+for _ in range(t):
+    n=int(input())
+    numbers=[input() for _ in range(n)]
+    trie=Trie()
+    flag=True
+    for number in numbers:
+        if not trie.insert(number):
+            flag=False
+            break
+    print('YES' if flag else 'NO')
+###实现Trie（前缀树）
+class TrieNode:
+    def __init__(self):
+        self.children={}
+        self.is_end=False
+class Trie:
+    def __init__(self):
+        self.root=TrieNode()
+    def insert(self, word: str) -> None:
+        node=self.root
+        for char in word:
+            if char not in node.children:
+                node.children[char]=TrieNode()
+            node=node.children[char]
+        node.is_end=True
+    def search(self, word: str) -> bool:
+        node=self.root
+        for char in word:
+            if char not in node.children:return False
+            node=node.children[char]
+        if node.is_end:return True
+        return False
+    def startsWith(self, prefix: str) -> bool:
+        node=self.root
+        for char in prefix:
+            if char not in node.children:return False
+            node=node.children[char]
+        return True
+```
+
+### **BFS**
+
+```python
+###降维
+class Solution:
+    def snakesAndLadders(self, board: List[List[int]]) -> int:
+        n=len(board)
+        deboard=[]
+        flag=1
+        for i in range(n-1,-1,-1):
+            if flag==1:
+                for j in range(n):
+                    deboard.append(board[i][j])
+                    flag=0
+            else:
+                for j in range(n-1,-1,-1):
+                    deboard.append(board[i][j])
+                    flag=1
+        queue=deque([1])
+        dist=[-1]*(n**2)
+        dist[0]=0
+        while queue:
+            cur_node=queue.popleft()
+            if cur_node==n*n:return dist[-1]
+            for x in range(cur_node+1,min(cur_node+6,n*n)+1):
+                next_pos=deboard[x-1] if deboard[x-1] !=-1 else x
+                if dist[next_pos-1]==-1:
+                    dist[next_pos-1]=dist[cur_node-1]+1
+                    queue.append(next_pos)
+        return -1
+###网络传送门旅游
+class Solution:
+    def minMoves(self, matrix: List[str]) -> int:
+        dic=defaultdict(list)
+        n,m=len(matrix),len(matrix[0])
+        directions=[(-1,0),(1,0),(0,1),(0,-1)]
+        for i in range(n):
+            for j in range(m):
+                if matrix[i][j] in 'ABCDEFGHIJKLMNOPQRSTUVWXYZ':
+                    dic[matrix[i][j]].append((i,j))
+                else:continue
+        queue=deque([(0,0)])
+        dis=[[float('inf')]*m for _ in range(n)]
+        dis[0][0]=0
+        while queue:
+            x,y=queue.popleft()
+            d=dis[x][y]
+            if (x,y)==(n-1,m-1):return d
+            if matrix[x][y] in dic:
+                for px,py in dic[matrix[x][y]]:
+                    if dis[px][py]>d:
+                        dis[px][py]=d
+                        queue.appendleft((px,py))
+                del dic[matrix[x][y]]
+            for dx,dy in directions:
+                nx,ny=x+dx,y+dy
+                if 0<=nx<n and 0<=ny<m and matrix[nx][ny]!='#' and d+1<dis[nx][ny]:
+                    dis[nx][ny]=d+1
+                    queue.append((nx,ny))
+        return -1
+```
+
+#### 前缀和
+
+```python
+###路径总和
+class Solution:
+    def pathSum(self, root: Optional[TreeNode], targetSum: int) -> int:
+        ans=[0]
+        dic=defaultdict(int)
+        dic[0]=1
+        def dfs(root,cur,ans):
+            if root is None:return 
+            cur+=root.val
+            ans[0]+=dic[cur-targetSum]
+            dic[cur]+=1
+            dfs(root.left,cur,ans)
+            dfs(root.right,cur,ans)
+            dic[cur]-=1
+        dfs(root,0,ans)
+        return ans[0]
+```
+
+#### Linked List
+
+```python
+###反转链表
+class Solution:
+    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:
+        prev=None
+        current=head
+        while current:
+            next_=current.next
+            current.next=prev
+            prev=current
+            current=next_
+        return prev
+###合并K个升序链表
+class Solution:
+    def mergeKLists(self, lists: List[Optional[ListNode]]) -> Optional[ListNode]:
+        import heapq
+        dummy=ListNode(0)
+        p=dummy
+        head=[]
+        for i in range(len(lists)):
+            if lists[i]:
+                heapq.heappush(head,(lists[i].val,i))
+                lists[i]=lists[i].next
+        while head:
+            val,idx=heapq.heappop(head)
+            p.next=ListNode(val)
+            p=p.next
+            if lists[idx]:
+                heapq.heappush(head,(lists[idx].val,idx))
+                lists[idx]=lists[idx].next
+        return dummy.next
+###回文链表
+class Solution:
+    def isPalindrome(self, head: Optional[ListNode]) -> bool:
+        # 快慢指针
+        if not head or not head.next:return True
+        slow,fast=head,head
+        while fast and fast.next:
+            slow=slow.next
+            fast=fast.next.next
+        prev,cur=None,slow
+        while cur:
+            next_=cur.next
+            cur.next=prev
+            prev=cur
+            cur=next_
+        left,right=prev,head
+        while left:
+            if left.val!=right.val:return False
+            left=left.next
+            right=right.next
+        return True
+```
+
+### 位运算
+
+| &     | 按位与       | \|     | 按位或     | ^      | 按位异或   |
+| ----- | ------------ | ------ | ---------- | ------ | ---------- |
+| **~** | **按位取反** | **<<** | **左移位** | **>>** | **右移位** |
+
+n<<1（相当于 n*2 ）、n>>1（相当于 n//2 ）、（if n&1: "奇数" else: "偶数"）
+return n > 0 and (n & (n - 1)) == 0（检验是否为2的幂）
+
+```python
+int(num,x)   ###转十进制，x为进制
+bin()  oct()  hex()   ###二进制、八进制、十六进制，输出字符串（需要去掉头）
+for key,value in dic.items():
+Counter()、defaultdict()、pairwise()、itertools.combinations()、from itertools import accumulate
+```
+
+```python
+class Solution:
+    def subsets(self, nums: List[int]) -> List[List[int]]:
+        ans,path = [],[]
+        n = len(nums)
+        def dfs(i: int) -> None:
+            if i == n:  # 子集构造完毕
+                ans.append(path.copy())  # 复制 path，也可以写 path[:]
+                return 
+            dfs(i + 1)   # 不选 nums[i]
+            path.append(nums[i])    # 选 nums[i]
+            dfs(i + 1)
+            path.pop()  # 恢复现场
+        dfs(0)
+        return ans
+```
+
